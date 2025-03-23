@@ -170,12 +170,15 @@ void b(uint32_t instruction) {
   printf("b function enter\n");
   int64_t imm26 = get_bits(instruction, 0, 25);
   imm26 = imm26 << 2;
-  NEXT_STATE.PC = CURRENT_STATE.PC + imm26;
+  NEXT_STATE.PC = CURRENT_STATE.PC + imm26 -4;
 
 }
 
 
 void br(uint32_t instruction) {
+  printf("br function enter\n");
+  uint32_t rn = get_bits(instruction, 5, 9);
+  NEXT_STATE.PC = CURRENT_STATE.REGS[rn]-4;
 
 }
 

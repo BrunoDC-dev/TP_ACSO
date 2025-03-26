@@ -4,16 +4,22 @@
 #include "shell.h"
 #include "sim.h"
 
-
-
 // make a global variable to keep track of the number of instructions
 int COUNT = 0;
 
 // array of function pointers
-void (*instruction_set[])(uint32_t) = {subs_imm, subs_reg,adds_imm, adds_reg, hlt, cmp_imm, b, br ,ands_reg, bcond , eor ,movz ,shifts_inm , stur,sturb ,ldur ,ldurb};
-uint32_t opcodes[] = {0xf1, 0x758,0xb1, 0x558, 0x6a2, 0x7d2,0b000101,0x3587C0 ,0xea ,0x54, 0xca, 0x1a5,0x34d ,0x7C0,0x1C0,0x7c2,0x1c2};
-int starts[] = {24, 21, 24, 21, 21, 24, 26,10, 24,24 ,24, 23 ,22 , 21,21,21,21};
-int N =17 ;
+void (*instruction_set[])(uint32_t) = {
+  subs_imm, subs_reg, adds_imm, adds_reg, hlt, cmp_imm, b, br, ands_reg,
+  bcond, eor, movz, shifts_inm, stur, sturb, ldur, ldurb, orr
+};
+uint32_t opcodes[] = {
+  0xf1, 0x758, 0xb1, 0x558, 0x6a2, 0x7d2, 0b000101, 0x3587C0, 0xea,
+  0x54, 0xca, 0x1a5, 0x34d, 0x7C0, 0x1C0, 0x7c2, 0x1c2, 0x550
+};
+int starts[] = {
+  24, 21, 24, 21, 21, 24, 26, 10, 24, 24, 24, 23, 22, 21, 21, 21, 21, 21
+};
+int N =18;
 
 
 void print_binary(uint32_t number) {
@@ -169,10 +175,11 @@ void b(uint32_t instruction) {
 }
 
 
-
 void br(uint32_t instruction) {
 
 }
+
+
 void ands_reg (uint32_t instruction) {
   printf("ands_reg function enter\n");
   uint32_t rd = get_bits(instruction, 0, 4);
@@ -443,3 +450,25 @@ void ldurb(uint32_t instruction){
 
 }
 // mia miau miau miaU...
+
+
+void orr(uint32_t instruction){
+  printf("orr function enter\n");
+  uint32_t rd = get_bits(instruction, 0, 4);
+  uint32_t rn = get_bits(instruction, 5, 9);
+  uint32_t rm = get_bits(instruction, 16, 20);
+  uint32_t shift = get_bits(instruction, 22, 23);
+
+  NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rn] | CURRENT_STATE.REGS[rm];
+  NEXT_STATE.FLAG_N = (NEXT_STATE.REGS[rd] < 0) ? 1 : 0;
+  NEXT_STATE.FLAG_Z = (NEXT_STATE.REGS[rd] == 0) ? 1 : 0;
+}
+
+// TODO
+
+// Br
+// STURH
+// LDURH
+// MUL
+// CBZ
+// CBNZ

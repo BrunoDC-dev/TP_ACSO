@@ -34,6 +34,7 @@ void stur(uint32_t instruction);
 void sturb(uint32_t instruction);
 void ldur(uint32_t instruction);
 void ldurb(uint32_t instruction);
+void orr(uint32_t instruction);
 
 
 #endif

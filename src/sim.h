@@ -26,5 +26,14 @@ void b(uint32_t instruction);
 void br(uint32_t instruction);
 void ands_reg(uint32_t instruction);
 void cmp_reg(uint32_t instruction);
-void beq(uint32_t instruction);
+void bcond(uint32_t instruction);
+void eor(uint32_t instruction);
+void movz(uint32_t instruction);
+void shifts_inm(uint32_t instruction);
+void stur(uint32_t instruction);
+void sturb(uint32_t instruction);
+void ldur(uint32_t instruction);
+void ldurb(uint32_t instruction);
+
+
 #endif

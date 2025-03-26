@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "sim.h": "c"
+        "sim.h": "c",
+        "shell.h": "c"
     }
 }

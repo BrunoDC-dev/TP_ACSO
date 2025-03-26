@@ -165,7 +165,6 @@ void cmp_imm(uint32_t instruction) {
   NEXT_STATE.FLAG_Z = (result == 0) ? 1 : 0;
 }
 
-
 void b(uint32_t instruction) {
   printf("b function enter\n");
   int64_t imm26 = get_bits(instruction, 0, 25);
@@ -174,11 +173,13 @@ void b(uint32_t instruction) {
 
 }
 
-
 void br(uint32_t instruction) {
-
+  printf("br function enter\n");
+  uint32_t rn = get_bits(instruction, 5, 9);
+  uint64_t addr = CURRENT_STATE.REGS[rn];
+  printf('BR: jumping to address in X%d: 0x%x\n', rn, addr);
+  NEXT_STATE.PC = addr;
 }
-
 
 void ands_reg (uint32_t instruction) {
   printf("ands_reg function enter\n");
@@ -189,15 +190,14 @@ void ands_reg (uint32_t instruction) {
   NEXT_STATE.FLAG_N = (NEXT_STATE.REGS[rd] < 0) ? 1 : 0;
   NEXT_STATE.FLAG_Z = (NEXT_STATE.REGS[rd] == 0) ? 1 : 0;
 }
+
 int64_t sign_extend(uint32_t number, int bits) {
   //if number is negative extends with ones, else extends with zeros 
   if ((number >> bits - 1)) {
     number |= 0xFFFFFFFFFFFFFFFF << bits;
   }
-
   return number;
 }
-
 
 void bcond(uint32_t instruction){
   printf("b_cond function enter\n");
@@ -256,9 +256,8 @@ uint32_t negate_number(uint32_t number){
   number = number >> 32 - position;
   
   return number;
-  
-  
 }
+
 void shifts_inm(uint32_t instruction){
   /**
  * shifts_inm - Implementación de la instrucción de desplazamiento inmediato.
@@ -463,6 +462,34 @@ void orr(uint32_t instruction){
   NEXT_STATE.FLAG_N = (NEXT_STATE.REGS[rd] < 0) ? 1 : 0;
   NEXT_STATE.FLAG_Z = (NEXT_STATE.REGS[rd] == 0) ? 1 : 0;
 }
+
+// sturh W1, [X2, #0x10] (descripción: M[X2 + 0x10](15:0) = X1(15:0), osea los primeros 16 bits 
+// del  registro  son guardados en los primeros 16 bits guardados en la   dirección de memoria). 
+// Importante acordarse que la memoria es little endian en Arm. 
+// Acuerdense que en el simulador la memoria empieza en 0x10000000, ver especificaciones, no 
+// cambia la implementación pero si el testeo
+
+void struh(uint32_t instruction){
+  printf("struh function enter\n");
+  uint32_t rd = get_bits(instruction, 0, 4);
+  uint32_t rn = get_bits(instruction, 5, 9);
+  int32_t offset = sign_extend(get_bits(instruction, 12, 20), 9);
+
+  printf("rd: %d\n", rd);
+  printf("rn: %d\n", rn);
+  printf("offset: %d\n", offset);
+
+
+  uint64_t mem_addr = CURRENT_STATE.REGS[rn] + offset;
+  printf("mem_addr: %x\n", mem_addr);
+  uint32_t lower_half = CURRENT_STATE.REGS[rd] & 0xFFFF;
+  printf("lower_half: %x\n", lower_half);
+
+  mem_write_32(mem_addr, lower_half);
+}
+
+  
+
 
 // TODO
 

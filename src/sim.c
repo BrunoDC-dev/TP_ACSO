@@ -10,16 +10,16 @@ int COUNT = 0;
 // array of function pointers
 void (*instruction_set[])(uint32_t) = {
   subs_imm, subs_reg, adds_imm, adds_reg, hlt, cmp_imm, b, br, ands_reg,
-  bcond, eor, movz, shifts_inm, stur, sturb, ldur, ldurb, orr ,sturh,adr 
+  bcond, eor, movz, shifts_inm, stur, sturb, ldur, ldurb, orr ,sturh,adr  ,mul ,cbz ,cbnz
 };
 uint32_t opcodes[] = {
   0xf1, 0x758, 0xb1, 0x558, 0x6a2, 0x7d2, 0b000101, 0x3587C0, 0xea,
-  0x54, 0xca, 0x1a5, 0x34d, 0x7C0, 0x1C0, 0x7c2, 0x1c2, 0x550 ,0x3C0, 0x10
+  0x54, 0xca, 0x1a5, 0x34d, 0x7C0, 0x1C0, 0x7c2, 0x1c2, 0x550 ,0x3C0, 0x10   , 0x4d8 , 0xb4 , 0xb5
 };
 int starts[] = {
-  24, 21, 24, 21, 21, 24, 26, 10, 24, 24, 24, 23, 22, 21, 21, 21, 21, 21 ,21, 24
+  24, 21, 24, 21, 21, 24, 26, 10, 24, 24, 24, 23, 22, 21, 21, 21, 21, 21 ,21, 24 ,21 ,24 ,24
 };
-int N =20;
+int N =23;
 
 
 void print_binary(uint32_t number) {
@@ -521,16 +521,44 @@ void ldurh(uint32_t instruction){
   int32_t offset = sign_extend(get_bits(instruction, 12, 20), 9);
 
   uint64_t mem_addr = CURRENT_STATE.REGS[rn] + offset;
-  printf('Reading half-word from memory at address 0x%x\n', mem_addr);
+  printf("Reading half-word from memory at address 0x%x\n", mem_addr);
 
   uint32_t lower_half = mem_read_32(mem_addr);
   NEXT_STATE.REGS[rd] = lower_half;
 }
 
-// TODO
+ void mul (uint32_t instruction){
+  printf("mul function enter\n");
+  uint32_t rd = get_bits(instruction, 0, 4);
+  uint32_t rn = get_bits(instruction, 5, 9);
+  uint32_t rm = get_bits(instruction, 16, 20);
+  NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rn] * CURRENT_STATE.REGS[rm];
+  NEXT_STATE.FLAG_N = (NEXT_STATE.REGS[rd] < 0) ? 1 : 0;
+  NEXT_STATE.FLAG_Z = (NEXT_STATE.REGS[rd] == 0) ? 1 : 0;
 
-// Br
-// LDURH
-// MUL
-// CBZ
-// CBNZ
+ }
+
+
+
+void cbz (uint32_t instruction){
+  printf("cbz function enter\n");
+  uint32_t rt = get_bits(instruction, 0, 4);
+  uint32_t imm19 = get_bits(instruction, 5, 23);
+  int32_t offset = sign_extend(imm19, 19) << 2;
+  if (CURRENT_STATE.REGS[rt] == 0){
+    NEXT_STATE.PC = CURRENT_STATE.PC + offset - 4;
+  }
+}
+
+void cbnz (uint32_t instruction){
+  printf("cbnz function enter\n");
+  uint32_t rt = get_bits(instruction, 0, 4);
+  uint32_t imm19 = get_bits(instruction, 5, 23);
+  int32_t offset = sign_extend(imm19, 19) << 2;
+  if (CURRENT_STATE.REGS[rt] != 0){
+    NEXT_STATE.PC = CURRENT_STATE.PC + offset - 4;
+  }
+}
+
+// TODO
+//

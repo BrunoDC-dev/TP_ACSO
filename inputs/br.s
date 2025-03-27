@@ -1,7 +1,7 @@
 .text
 
 start:
- X0, foo       
+X0, foo       
 BR X0             
 
 bar:

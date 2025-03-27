@@ -7,19 +7,19 @@
 // make a global variable to keep track of the number of instructions
 int COUNT = 0;
 
-// array of function pointers
+
 void (*instruction_set[])(uint32_t) = {
   subs_imm, subs_reg, adds_imm, adds_reg, hlt, cmp_imm, b, br, ands_reg,
-  bcond, eor, movz, shifts_inm, stur, sturb, ldur, ldurb, orr ,sturh,adr  ,mul ,cbz ,cbnz
+  bcond, eor, movz, shifts_inm, stur, sturb, ldur, ldurb, orr ,sturh,adr  ,ldurh, mul ,cbz ,cbnz
 };
 uint32_t opcodes[] = {
   0xf1, 0x758, 0xb1, 0x558, 0x6a2, 0x7d2, 0b000101, 0x3587C0, 0xea,
-  0x54, 0xca, 0x1a5, 0x34d, 0x7C0, 0x1C0, 0x7c2, 0x1c2, 0x550 ,0x3C0, 0x10   , 0x4d8 , 0xb4 , 0xb5
+  0x54, 0xca, 0x1a5, 0x34d, 0x7C0, 0x1C0, 0x7c2, 0x1c2, 0x550 ,0x3C0, 0x10 ,0x3c2  , 0x4d8 , 0xb4 , 0xb5
 };
 int starts[] = {
-  24, 21, 24, 21, 21, 24, 26, 10, 24, 24, 24, 23, 22, 21, 21, 21, 21, 21 ,21, 24 ,21 ,24 ,24
+  24, 21, 24, 21, 21, 24, 26, 10, 24, 24, 24, 23, 22, 21, 21, 21, 21, 21 ,21, 24,21 ,21 ,24 ,24
 };
-int N =23;
+int N =24;
 
 
 void print_binary(uint32_t number) {
@@ -69,6 +69,10 @@ uint32_t get_bits(uint32_t number, int start, int end) {
   return extracted_bits >> start;
 }
 
+void update_flags(int64_t result) {
+  NEXT_STATE.FLAG_N = (result < 0) ? 1 : 0;
+  NEXT_STATE.FLAG_Z = (result == 0) ? 1 : 0;
+}
 
 void adds_imm(uint32_t instruction) {
   printf("adds_imm function enter\n");
@@ -86,8 +90,7 @@ void adds_imm(uint32_t instruction) {
   }
 
   NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rn] + imm12;
-  NEXT_STATE.FLAG_N = (NEXT_STATE.REGS[rd] < 0) ? 1 : 0;
-  NEXT_STATE.FLAG_Z = (NEXT_STATE.REGS[rd] == 0) ? 1 : 0;
+  update_flags(NEXT_STATE.REGS[rd]);
 }
 
 void adds_reg(uint32_t instruction) {
@@ -99,8 +102,7 @@ void adds_reg(uint32_t instruction) {
   
 
   NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rn] + CURRENT_STATE.REGS[rm];
-  NEXT_STATE.FLAG_N = (NEXT_STATE.REGS[rd] < 0) ? 1 : 0;
-  NEXT_STATE.FLAG_Z = (NEXT_STATE.REGS[rd] == 0) ? 1 : 0;
+  update_flags(NEXT_STATE.REGS[rd]);
 }
 
 
@@ -119,8 +121,7 @@ void subs_imm(uint32_t instruction) {
   }
 
   NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rn] - imm12;
-  NEXT_STATE.FLAG_N = (NEXT_STATE.REGS[rd] < 0) ? 1 : 0;
-  NEXT_STATE.FLAG_Z = (NEXT_STATE.REGS[rd] == 0) ? 1 : 0;
+  update_flags(NEXT_STATE.REGS[rd]);
 }
 
 void subs_reg(uint32_t instruction) {
@@ -133,15 +134,12 @@ void subs_reg(uint32_t instruction) {
       printf("cmp_reg function enter\n");
       // Es CMP (comparación) - solo actualiza flags, no guarda resultado
       int64_t result = CURRENT_STATE.REGS[rn] - CURRENT_STATE.REGS[rm];
-      NEXT_STATE.FLAG_N = (result < 0) ? 1 : 0;
-      NEXT_STATE.FLAG_Z = (result == 0) ? 1 : 0;
   } else {
       printf("subs_reg function enter\n");
       // Es SUBS - actualiza flags y guarda resultado
       NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rn] - CURRENT_STATE.REGS[rm];
-      NEXT_STATE.FLAG_N = (NEXT_STATE.REGS[rd] < 0) ? 1 : 0;
-      NEXT_STATE.FLAG_Z = (NEXT_STATE.REGS[rd] == 0) ? 1 : 0;
   }
+  update_flags(NEXT_STATE.REGS[rd]);
 }
 
 void hlt(uint32_t instruction) {
@@ -161,8 +159,7 @@ void cmp_imm(uint32_t instruction) {
   }
 
   int64_t result = CURRENT_STATE.REGS[rn] - imm12;
-  NEXT_STATE.FLAG_N = (result < 0) ? 1 : 0;
-  NEXT_STATE.FLAG_Z = (result == 0) ? 1 : 0;
+  update_flags(result);
 }
 
 void b(uint32_t instruction) {
@@ -185,8 +182,7 @@ void ands_reg (uint32_t instruction) {
   uint32_t rn = get_bits(instruction, 5, 9);
   uint32_t rm = get_bits(instruction, 16, 20);
   NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rn] & CURRENT_STATE.REGS[rm];
-  NEXT_STATE.FLAG_N = (NEXT_STATE.REGS[rd] < 0) ? 1 : 0;
-  NEXT_STATE.FLAG_Z = (NEXT_STATE.REGS[rd] == 0) ? 1 : 0;
+  update_flags(NEXT_STATE.REGS[rd]);
 }
 
 int64_t sign_extend(uint32_t number, int bits) {
@@ -220,8 +216,7 @@ void eor(uint32_t instruction){
   uint32_t rn = get_bits(instruction, 5, 9);
   uint32_t rm = get_bits(instruction, 16, 20);
   NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rn] ^ CURRENT_STATE.REGS[rm];
-  NEXT_STATE.FLAG_N = (NEXT_STATE.REGS[rd] < 0) ? 1 : 0;
-  NEXT_STATE.FLAG_Z = (NEXT_STATE.REGS[rd] == 0) ? 1 : 0;
+  update_flags(NEXT_STATE.REGS[rd]);
 
   // todo se prende flags si o no ?
 }
@@ -236,8 +231,7 @@ void movz(uint32_t instruction){
     shift_amount = 16;
   }
   NEXT_STATE.REGS[rd] = imm16 << shift_amount;
-  NEXT_STATE.FLAG_N = (NEXT_STATE.REGS[rd] < 0) ? 1 : 0;
-  NEXT_STATE.FLAG_Z = (NEXT_STATE.REGS[rd] == 0) ? 1 : 0;
+  update_flags(NEXT_STATE.REGS[rd]);
 }
 
 uint32_t negate_number(uint32_t number){
@@ -292,17 +286,14 @@ void shifts_inm(uint32_t instruction){
 
   if(imms == 63){
     NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rn] >> immr; 
-    NEXT_STATE.FLAG_N = (NEXT_STATE.REGS[rd] <0) ? 1 : 0;  
-    NEXT_STATE.FLAG_Z = (NEXT_STATE.REGS[rd] == 0) ? 1 : 0;
   }
   else{
     uint32_t negaitve_imms = negate_number(imms);
     NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rn] << negaitve_imms;
-    NEXT_STATE.FLAG_N = (NEXT_STATE.REGS[rd] <0) ? 1 : 0;  
-    NEXT_STATE.FLAG_Z = (NEXT_STATE.REGS[rd] == 0) ? 1 : 0;
     printf("Valor de negaitve_imms: %d\n", negaitve_imms);
     printf("Valor de imms: %d\n", imms);
   }
+  update_flags(NEXT_STATE.REGS[rd]);
 }
 
 void stur(uint32_t instruction){
@@ -457,8 +448,7 @@ void orr(uint32_t instruction){
   uint32_t shift = get_bits(instruction, 22, 23);
 
   NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rn] | CURRENT_STATE.REGS[rm];
-  NEXT_STATE.FLAG_N = (NEXT_STATE.REGS[rd] < 0) ? 1 : 0;
-  NEXT_STATE.FLAG_Z = (NEXT_STATE.REGS[rd] == 0) ? 1 : 0;
+  update_flags(NEXT_STATE.REGS[rd]);
 }
 
 void adr (uint32_t instruction){
@@ -467,8 +457,7 @@ void adr (uint32_t instruction){
   uint32_t imm19 = get_bits(instruction, 5, 23);
   int32_t offset = sign_extend(imm19, 19) << 2;
   NEXT_STATE.REGS[rd] = CURRENT_STATE.PC + offset;
-  NEXT_STATE.FLAG_N = (NEXT_STATE.REGS[rd] < 0) ? 1 : 0;
-  NEXT_STATE.FLAG_Z = (NEXT_STATE.REGS[rd] == 0) ? 1 : 0;
+  update_flags(NEXT_STATE.REGS[rd]);
 }
 
 
@@ -479,8 +468,7 @@ void add(uint32_t instruction) {
   uint32_t rn = get_bits(instruction, 5, 9);
   uint32_t rm = get_bits(instruction, 16, 20);
   NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rn] + CURRENT_STATE.REGS[rm];
-  NEXT_STATE.FLAG_N = (NEXT_STATE.REGS[rd] < 0) ? 1 : 0;
-  NEXT_STATE.FLAG_Z = (NEXT_STATE.REGS[rd] == 0) ? 1 : 0;
+  update_flags(NEXT_STATE.REGS[rd]);
 }
 
 // TODO
@@ -512,8 +500,7 @@ void sturh(uint32_t instruction){
   mem_write_32(mem_addr, lower_half);
 }
 
- // ldurh  W1,  [X2,  #0x10]  (descripción:  X1=  48’b0,  M[X2  +  0x10](15:0),  osea  48  ceros  y  los  
- // primeros 16 bits guardados en la dirección de memoria) 
+
 void ldurh(uint32_t instruction){
   printf("ldurh function enter\n");
   uint32_t rd = get_bits(instruction, 0, 4);
@@ -521,10 +508,9 @@ void ldurh(uint32_t instruction){
   int32_t offset = sign_extend(get_bits(instruction, 12, 20), 9);
 
   uint64_t mem_addr = CURRENT_STATE.REGS[rn] + offset;
-  printf("Reading half-word from memory at address 0x%x\n", mem_addr);
-
-  uint32_t lower_half = mem_read_32(mem_addr);
-  NEXT_STATE.REGS[rd] = lower_half;
+  uint32_t full_word = mem_read_32(mem_addr);
+  uint32_t halfword = full_word & 0xFFFF; 
+  NEXT_STATE.REGS[rd] = halfword; 
 }
 
  void mul (uint32_t instruction){

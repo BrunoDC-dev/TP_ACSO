@@ -10,16 +10,16 @@ int COUNT = 0;
 // array of function pointers
 void (*instruction_set[])(uint32_t) = {
   subs_imm, subs_reg, adds_imm, adds_reg, hlt, cmp_imm, b, br, ands_reg,
-  bcond, eor, movz, shifts_inm, stur, sturb, ldur, ldurb, orr
+  bcond, eor, movz, shifts_inm, stur, sturb, ldur, ldurb, orr ,adr
 };
 uint32_t opcodes[] = {
   0xf1, 0x758, 0xb1, 0x558, 0x6a2, 0x7d2, 0b000101, 0x3587C0, 0xea,
-  0x54, 0xca, 0x1a5, 0x34d, 0x7C0, 0x1C0, 0x7c2, 0x1c2, 0x550
+  0x54, 0xca, 0x1a5, 0x34d, 0x7C0, 0x1C0, 0x7c2, 0x1c2, 0x550 , 0x10
 };
 int starts[] = {
-  24, 21, 24, 21, 21, 24, 26, 10, 24, 24, 24, 23, 22, 21, 21, 21, 21, 21
+  24, 21, 24, 21, 21, 24, 26, 10, 24, 24, 24, 23, 22, 21, 21, 21, 21, 21 , 24
 };
-int N =18;
+int N =19;
 
 
 void print_binary(uint32_t number) {
@@ -168,10 +168,9 @@ void cmp_imm(uint32_t instruction) {
 
 void b(uint32_t instruction) {
   printf("b function enter\n");
-  int64_t imm26 = get_bits(instruction, 0, 25);
-  imm26 = imm26 << 2;
-  NEXT_STATE.PC = CURRENT_STATE.PC + imm26 -4;
-
+  int64_t imm26 = get_bits(instruction, 0, 25); // Extraer los bits 0-25
+  int32_t offset = sign_extend(imm26, 26) << 2;          // Extender signo y desplazar 2 bits
+  NEXT_STATE.PC = CURRENT_STATE.PC + offset -4;     // Actualizar el PC con el desplazamiento
 }
 
 
@@ -467,9 +466,31 @@ void orr(uint32_t instruction){
   NEXT_STATE.FLAG_Z = (NEXT_STATE.REGS[rd] == 0) ? 1 : 0;
 }
 
-// TODO
+void adr (uint32_t instruction){
+  printf("adr function enter\n");
+  uint32_t rd = get_bits(instruction, 0, 4);
+  uint32_t imm19 = get_bits(instruction, 5, 23);
+  int32_t offset = sign_extend(imm19, 19) << 2;
+  NEXT_STATE.REGS[rd] = CURRENT_STATE.PC + offset;
+  NEXT_STATE.FLAG_N = (NEXT_STATE.REGS[rd] < 0) ? 1 : 0;
+  NEXT_STATE.FLAG_Z = (NEXT_STATE.REGS[rd] == 0) ? 1 : 0;
+}
 
-// Br
+
+
+void add(uint32_t instruction) {
+  printf("add function enter\n");
+  uint32_t rd = get_bits(instruction, 0, 4);
+  uint32_t rn = get_bits(instruction, 5, 9);
+  uint32_t rm = get_bits(instruction, 16, 20);
+  NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rn] + CURRENT_STATE.REGS[rm];
+  NEXT_STATE.FLAG_N = (NEXT_STATE.REGS[rd] < 0) ? 1 : 0;
+  NEXT_STATE.FLAG_Z = (NEXT_STATE.REGS[rd] == 0) ? 1 : 0;
+}
+
+// TODO
+// chcequea flags en cada instruccion
+
 // STURH
 // LDURH
 // MUL

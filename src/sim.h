@@ -5,6 +5,11 @@
 
 #ifndef _SIM_H_
 #define _SIM_H_
+
+int64_t sign_extend(uint32_t number, int bits);
+
+
+
 // headers
 void adds_imm(uint32_t instruction);
 void adds_reg(uint32_t instruction);
@@ -35,6 +40,7 @@ void sturb(uint32_t instruction);
 void ldur(uint32_t instruction);
 void ldurb(uint32_t instruction);
 void orr(uint32_t instruction);
+void adr(uint32_t instruction);
 
 
 #endif

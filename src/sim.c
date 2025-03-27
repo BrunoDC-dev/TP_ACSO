@@ -10,16 +10,16 @@ int COUNT = 0;
 // array of function pointers
 void (*instruction_set[])(uint32_t) = {
   subs_imm, subs_reg, adds_imm, adds_reg, hlt, cmp_imm, b, br, ands_reg,
-  bcond, eor, movz, shifts_inm, stur, sturb, ldur, ldurb, orr ,adr
+  bcond, eor, movz, shifts_inm, stur, sturb, ldur, ldurb, orr ,sturh,adr 
 };
 uint32_t opcodes[] = {
   0xf1, 0x758, 0xb1, 0x558, 0x6a2, 0x7d2, 0b000101, 0x3587C0, 0xea,
-  0x54, 0xca, 0x1a5, 0x34d, 0x7C0, 0x1C0, 0x7c2, 0x1c2, 0x550 , 0x10
+  0x54, 0xca, 0x1a5, 0x34d, 0x7C0, 0x1C0, 0x7c2, 0x1c2, 0x550 ,0x3C0, 0x10
 };
 int starts[] = {
-  24, 21, 24, 21, 21, 24, 26, 10, 24, 24, 24, 23, 22, 21, 21, 21, 21, 21 , 24
+  24, 21, 24, 21, 21, 24, 26, 10, 24, 24, 24, 23, 22, 21, 21, 21, 21, 21 ,21, 24
 };
-int N =19;
+int N =20;
 
 
 void print_binary(uint32_t number) {
@@ -165,7 +165,6 @@ void cmp_imm(uint32_t instruction) {
   NEXT_STATE.FLAG_Z = (result == 0) ? 1 : 0;
 }
 
-
 void b(uint32_t instruction) {
   printf("b function enter\n");
   int64_t imm26 = get_bits(instruction, 0, 25); // Extraer los bits 0-25
@@ -173,14 +172,12 @@ void b(uint32_t instruction) {
   NEXT_STATE.PC = CURRENT_STATE.PC + offset -4;     // Actualizar el PC con el desplazamiento
 }
 
-
 void br(uint32_t instruction) {
   printf("br function enter\n");
   uint32_t rn = get_bits(instruction, 5, 9);
   NEXT_STATE.PC = CURRENT_STATE.REGS[rn]-4;
 
 }
-
 
 void ands_reg (uint32_t instruction) {
   printf("ands_reg function enter\n");
@@ -191,15 +188,14 @@ void ands_reg (uint32_t instruction) {
   NEXT_STATE.FLAG_N = (NEXT_STATE.REGS[rd] < 0) ? 1 : 0;
   NEXT_STATE.FLAG_Z = (NEXT_STATE.REGS[rd] == 0) ? 1 : 0;
 }
+
 int64_t sign_extend(uint32_t number, int bits) {
   //if number is negative extends with ones, else extends with zeros 
   if ((number >> bits - 1)) {
     number |= 0xFFFFFFFFFFFFFFFF << bits;
   }
-
   return number;
 }
-
 
 void bcond(uint32_t instruction){
   printf("b_cond function enter\n");
@@ -258,9 +254,8 @@ uint32_t negate_number(uint32_t number){
   number = number >> 32 - position;
   
   return number;
-  
-  
 }
+
 void shifts_inm(uint32_t instruction){
   /**
  * shifts_inm - Implementación de la instrucción de desplazamiento inmediato.
@@ -492,6 +487,49 @@ void add(uint32_t instruction) {
 // chcequea flags en cada instruccion
 
 // STURH
+// sturh W1, [X2, #0x10] (descripción: M[X2 + 0x10](15:0) = X1(15:0), osea los primeros 16 bits 
+// del  registro  son guardados en los primeros 16 bits guardados en la   dirección de memoria). 
+// Importante acordarse que la memoria es little endian en Arm. 
+// Acuerdense que en el simulador la memoria empieza en 0x10000000, ver especificaciones, no 
+// cambia la implementación pero si el testeo
+
+void sturh(uint32_t instruction){
+  printf("struh function enter\n");
+  uint32_t rd = get_bits(instruction, 0, 4);
+  uint32_t rn = get_bits(instruction, 5, 9);
+  int32_t offset = sign_extend(get_bits(instruction, 12, 20), 9);
+
+  printf("rd: %d\n", rd);
+  printf("rn: %d\n", rn);
+  printf("offset: %d\n", offset);
+
+
+  uint64_t mem_addr = CURRENT_STATE.REGS[rn] + offset;
+  printf("mem_addr: %x\n", mem_addr);
+  uint32_t lower_half = CURRENT_STATE.REGS[rd] & 0xFFFF;
+  printf("lower_half: %x\n", lower_half);
+
+  mem_write_32(mem_addr, lower_half);
+}
+
+ // ldurh  W1,  [X2,  #0x10]  (descripción:  X1=  48’b0,  M[X2  +  0x10](15:0),  osea  48  ceros  y  los  
+ // primeros 16 bits guardados en la dirección de memoria) 
+void ldurh(uint32_t instruction){
+  printf("ldurh function enter\n");
+  uint32_t rd = get_bits(instruction, 0, 4);
+  uint32_t rn = get_bits(instruction, 5, 9);
+  int32_t offset = sign_extend(get_bits(instruction, 12, 20), 9);
+
+  uint64_t mem_addr = CURRENT_STATE.REGS[rn] + offset;
+  printf('Reading half-word from memory at address 0x%x\n', mem_addr);
+
+  uint32_t lower_half = mem_read_32(mem_addr);
+  NEXT_STATE.REGS[rd] = lower_half;
+}
+
+// TODO
+
+// Br
 // LDURH
 // MUL
 // CBZ

@@ -41,6 +41,7 @@ void ldur(uint32_t instruction);
 void ldurb(uint32_t instruction);
 void orr(uint32_t instruction);
 void adr(uint32_t instruction);
+void sturh(uint32_t instruction);
 
 
 #endif

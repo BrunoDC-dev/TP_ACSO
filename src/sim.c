@@ -519,9 +519,7 @@ void ldurh(uint32_t instruction){
   uint32_t rn = get_bits(instruction, 5, 9);
   uint32_t rm = get_bits(instruction, 16, 20);
   NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rn] * CURRENT_STATE.REGS[rm];
-  NEXT_STATE.FLAG_N = (NEXT_STATE.REGS[rd] < 0) ? 1 : 0;
-  NEXT_STATE.FLAG_Z = (NEXT_STATE.REGS[rd] == 0) ? 1 : 0;
-
+  update_flags(NEXT_STATE.REGS[rd]);
  }
 
 

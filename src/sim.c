@@ -10,16 +10,16 @@ int COUNT = 0;
 // array of function pointers
 void (*instruction_set[])(uint32_t) = {
   subs_imm, subs_reg, adds_imm, adds_reg, hlt, cmp_imm, b, br, ands_reg,
-  bcond, eor, movz, shifts_inm, stur, sturb, ldur, ldurb, orr
+  bcond, eor, movz, shifts_inm, stur, sturb, ldur, ldurb, orr, sturh
 };
 uint32_t opcodes[] = {
   0xf1, 0x758, 0xb1, 0x558, 0x6a2, 0x7d2, 0b000101, 0x3587C0, 0xea,
-  0x54, 0xca, 0x1a5, 0x34d, 0x7C0, 0x1C0, 0x7c2, 0x1c2, 0x550
+  0x54, 0xca, 0x1a5, 0x34d, 0x7C0, 0x1C0, 0x7c2, 0x1c2, 0x550, 0x3C0
 };
 int starts[] = {
-  24, 21, 24, 21, 21, 24, 26, 10, 24, 24, 24, 23, 22, 21, 21, 21, 21, 21
+  24, 21, 24, 21, 21, 24, 26, 10, 24, 24, 24, 23, 22, 21, 21, 21, 21, 21, 21
 };
-int N =18;
+int N =19;
 
 
 void print_binary(uint32_t number) {
@@ -469,7 +469,7 @@ void orr(uint32_t instruction){
 // Acuerdense que en el simulador la memoria empieza en 0x10000000, ver especificaciones, no 
 // cambia la implementación pero si el testeo
 
-void struh(uint32_t instruction){
+void sturh(uint32_t instruction){
   printf("struh function enter\n");
   uint32_t rd = get_bits(instruction, 0, 4);
   uint32_t rn = get_bits(instruction, 5, 9);
@@ -488,13 +488,24 @@ void struh(uint32_t instruction){
   mem_write_32(mem_addr, lower_half);
 }
 
-  
+ // ldurh  W1,  [X2,  #0x10]  (descripción:  X1=  48’b0,  M[X2  +  0x10](15:0),  osea  48  ceros  y  los  
+ // primeros 16 bits guardados en la dirección de memoria) 
+void ldurh(uint32_t instruction){
+  printf("ldurh function enter\n");
+  uint32_t rd = get_bits(instruction, 0, 4);
+  uint32_t rn = get_bits(instruction, 5, 9);
+  int32_t offset = sign_extend(get_bits(instruction, 12, 20), 9);
 
+  uint64_t mem_addr = CURRENT_STATE.REGS[rn] + offset;
+  printf('Reading half-word from memory at address 0x%x\n', mem_addr);
+
+  uint32_t lower_half = mem_read_32(mem_addr);
+  NEXT_STATE.REGS[rd] = lower_half;
+}
 
 // TODO
 
 // Br
-// STURH
 // LDURH
 // MUL
 // CBZ

@@ -69,6 +69,10 @@ uint32_t get_bits(uint32_t number, int start, int end) {
   return extracted_bits >> start;
 }
 
+void update_flags(int64_t result) {
+  NEXT_STATE.FLAG_N = (result < 0) ? 1 : 0;
+  NEXT_STATE.FLAG_Z = (result == 0) ? 1 : 0;
+}
 
 void adds_imm(uint32_t instruction) {
   printf("adds_imm function enter\n");
@@ -86,8 +90,7 @@ void adds_imm(uint32_t instruction) {
   }
 
   NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rn] + imm12;
-  NEXT_STATE.FLAG_N = (NEXT_STATE.REGS[rd] < 0) ? 1 : 0;
-  NEXT_STATE.FLAG_Z = (NEXT_STATE.REGS[rd] == 0) ? 1 : 0;
+  update_flags(NEXT_STATE.REGS[rd]);
 }
 
 void adds_reg(uint32_t instruction) {
@@ -99,8 +102,7 @@ void adds_reg(uint32_t instruction) {
   
 
   NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rn] + CURRENT_STATE.REGS[rm];
-  NEXT_STATE.FLAG_N = (NEXT_STATE.REGS[rd] < 0) ? 1 : 0;
-  NEXT_STATE.FLAG_Z = (NEXT_STATE.REGS[rd] == 0) ? 1 : 0;
+  update_flags(NEXT_STATE.REGS[rd]);
 }
 
 
@@ -119,8 +121,7 @@ void subs_imm(uint32_t instruction) {
   }
 
   NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rn] - imm12;
-  NEXT_STATE.FLAG_N = (NEXT_STATE.REGS[rd] < 0) ? 1 : 0;
-  NEXT_STATE.FLAG_Z = (NEXT_STATE.REGS[rd] == 0) ? 1 : 0;
+  update_flags(NEXT_STATE.REGS[rd]);
 }
 
 void subs_reg(uint32_t instruction) {
@@ -133,15 +134,12 @@ void subs_reg(uint32_t instruction) {
       printf("cmp_reg function enter\n");
       // Es CMP (comparación) - solo actualiza flags, no guarda resultado
       int64_t result = CURRENT_STATE.REGS[rn] - CURRENT_STATE.REGS[rm];
-      NEXT_STATE.FLAG_N = (result < 0) ? 1 : 0;
-      NEXT_STATE.FLAG_Z = (result == 0) ? 1 : 0;
   } else {
       printf("subs_reg function enter\n");
       // Es SUBS - actualiza flags y guarda resultado
       NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rn] - CURRENT_STATE.REGS[rm];
-      NEXT_STATE.FLAG_N = (NEXT_STATE.REGS[rd] < 0) ? 1 : 0;
-      NEXT_STATE.FLAG_Z = (NEXT_STATE.REGS[rd] == 0) ? 1 : 0;
   }
+  update_flags(NEXT_STATE.REGS[rd]);
 }
 
 void hlt(uint32_t instruction) {
@@ -161,8 +159,7 @@ void cmp_imm(uint32_t instruction) {
   }
 
   int64_t result = CURRENT_STATE.REGS[rn] - imm12;
-  NEXT_STATE.FLAG_N = (result < 0) ? 1 : 0;
-  NEXT_STATE.FLAG_Z = (result == 0) ? 1 : 0;
+  update_flags(result);
 }
 
 void b(uint32_t instruction) {
@@ -185,8 +182,7 @@ void ands_reg (uint32_t instruction) {
   uint32_t rn = get_bits(instruction, 5, 9);
   uint32_t rm = get_bits(instruction, 16, 20);
   NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rn] & CURRENT_STATE.REGS[rm];
-  NEXT_STATE.FLAG_N = (NEXT_STATE.REGS[rd] < 0) ? 1 : 0;
-  NEXT_STATE.FLAG_Z = (NEXT_STATE.REGS[rd] == 0) ? 1 : 0;
+  update_flags(NEXT_STATE.REGS[rd]);
 }
 
 int64_t sign_extend(uint32_t number, int bits) {
@@ -220,8 +216,7 @@ void eor(uint32_t instruction){
   uint32_t rn = get_bits(instruction, 5, 9);
   uint32_t rm = get_bits(instruction, 16, 20);
   NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rn] ^ CURRENT_STATE.REGS[rm];
-  NEXT_STATE.FLAG_N = (NEXT_STATE.REGS[rd] < 0) ? 1 : 0;
-  NEXT_STATE.FLAG_Z = (NEXT_STATE.REGS[rd] == 0) ? 1 : 0;
+  update_flags(NEXT_STATE.REGS[rd]);
 
   // todo se prende flags si o no ?
 }
@@ -236,8 +231,7 @@ void movz(uint32_t instruction){
     shift_amount = 16;
   }
   NEXT_STATE.REGS[rd] = imm16 << shift_amount;
-  NEXT_STATE.FLAG_N = (NEXT_STATE.REGS[rd] < 0) ? 1 : 0;
-  NEXT_STATE.FLAG_Z = (NEXT_STATE.REGS[rd] == 0) ? 1 : 0;
+  update_flags(NEXT_STATE.REGS[rd]);
 }
 
 uint32_t negate_number(uint32_t number){
@@ -292,17 +286,14 @@ void shifts_inm(uint32_t instruction){
 
   if(imms == 63){
     NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rn] >> immr; 
-    NEXT_STATE.FLAG_N = (NEXT_STATE.REGS[rd] <0) ? 1 : 0;  
-    NEXT_STATE.FLAG_Z = (NEXT_STATE.REGS[rd] == 0) ? 1 : 0;
   }
   else{
     uint32_t negaitve_imms = negate_number(imms);
     NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rn] << negaitve_imms;
-    NEXT_STATE.FLAG_N = (NEXT_STATE.REGS[rd] <0) ? 1 : 0;  
-    NEXT_STATE.FLAG_Z = (NEXT_STATE.REGS[rd] == 0) ? 1 : 0;
     printf("Valor de negaitve_imms: %d\n", negaitve_imms);
     printf("Valor de imms: %d\n", imms);
   }
+  update_flags(NEXT_STATE.REGS[rd]);
 }
 
 void stur(uint32_t instruction){
@@ -457,8 +448,7 @@ void orr(uint32_t instruction){
   uint32_t shift = get_bits(instruction, 22, 23);
 
   NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rn] | CURRENT_STATE.REGS[rm];
-  NEXT_STATE.FLAG_N = (NEXT_STATE.REGS[rd] < 0) ? 1 : 0;
-  NEXT_STATE.FLAG_Z = (NEXT_STATE.REGS[rd] == 0) ? 1 : 0;
+  update_flags(NEXT_STATE.REGS[rd]);
 }
 
 void adr (uint32_t instruction){
@@ -467,8 +457,7 @@ void adr (uint32_t instruction){
   uint32_t imm19 = get_bits(instruction, 5, 23);
   int32_t offset = sign_extend(imm19, 19) << 2;
   NEXT_STATE.REGS[rd] = CURRENT_STATE.PC + offset;
-  NEXT_STATE.FLAG_N = (NEXT_STATE.REGS[rd] < 0) ? 1 : 0;
-  NEXT_STATE.FLAG_Z = (NEXT_STATE.REGS[rd] == 0) ? 1 : 0;
+  update_flags(NEXT_STATE.REGS[rd]);
 }
 
 
@@ -479,8 +468,7 @@ void add(uint32_t instruction) {
   uint32_t rn = get_bits(instruction, 5, 9);
   uint32_t rm = get_bits(instruction, 16, 20);
   NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rn] + CURRENT_STATE.REGS[rm];
-  NEXT_STATE.FLAG_N = (NEXT_STATE.REGS[rd] < 0) ? 1 : 0;
-  NEXT_STATE.FLAG_Z = (NEXT_STATE.REGS[rd] == 0) ? 1 : 0;
+  update_flags(NEXT_STATE.REGS[rd]);
 }
 
 // TODO

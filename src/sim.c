@@ -543,6 +543,4 @@ void cbnz (uint32_t instruction){
     NEXT_STATE.PC = CURRENT_STATE.PC + offset - 4;
   }
 }
-
-// TODO
-//
+  

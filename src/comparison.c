@@ -34,9 +34,6 @@ void eor(uint32_t instruction){
     uint32_t rn = get_bits(instruction, 5, 9);
     uint32_t rm = get_bits(instruction, 16, 20);
     NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rn] ^ CURRENT_STATE.REGS[rm];
-    update_flags(NEXT_STATE.REGS[rd]);
-  
-    // todo se prende flags si o no ?
 }
 
 void orr(uint32_t instruction){

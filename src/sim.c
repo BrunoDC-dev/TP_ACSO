@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
+
 #include "shell.h"
 #include "sim.h"
 #include "utils.h"
@@ -24,6 +25,7 @@ int starts[] = {
   24, 21, 24, 21, 21, 24, 26, 10, 24, 24, 24, 23, 22, 21, 21, 21, 21, 21 ,21, 24,21 ,21 ,24 ,24
 };
 int N =24;
+
 
 void print_binary(uint32_t number) {
   for (int i = 0; i < 32; i++) {

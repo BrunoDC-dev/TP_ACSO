@@ -6,13 +6,11 @@
 
 void adds_imm(uint32_t instruction) {
     printf("adds_imm function enter\n");
-  
-  
+ 
     uint32_t rn = get_bits(instruction, 5, 9);
     uint32_t rd = get_bits(instruction, 0, 4);
     int64_t imm12 = get_bits(instruction, 10, 21);
     uint32_t shift = get_bits(instruction, 22, 23);
-  
   
     if (shift){
       printf("shifting imm12\n");
@@ -34,8 +32,6 @@ void adds_reg(uint32_t instruction) {
     NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rn] + CURRENT_STATE.REGS[rm];
     update_flags(NEXT_STATE.REGS[rd]);
 }
-  
-  
   
 void subs_imm(uint32_t instruction) {
     printf("subs_imm function enter\n");
@@ -89,4 +85,4 @@ void mul (uint32_t instruction){
     uint32_t rm = get_bits(instruction, 16, 20);
     NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rn] * CURRENT_STATE.REGS[rm];
     update_flags(NEXT_STATE.REGS[rd]);
-   }
+}

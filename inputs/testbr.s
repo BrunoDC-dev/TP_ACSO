@@ -1,4 +1,3 @@
-
 .text
 start:
     MOVZ X1, 0x4000   

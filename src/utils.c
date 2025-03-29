@@ -3,6 +3,57 @@
 #include <string.h>
 #include "shell.h"
 #include "sim.h"
+#include "utils.h"
+
+DecodedInstr decode_instruction(uint32_t instruction, int instr_type) {
+  DecodedInstr d = {0};
+
+  switch(instr_type) {
+      case 0: // R-type
+          d.rd = get_bits(instruction, 0, 4);
+          d.rn = get_bits(instruction, 5, 9);
+          d.rm = get_bits(instruction, 16, 20);
+          d.shift = get_bits(instruction, 22, 23);
+          break;
+
+      case 1: // I-type
+          d.rd = get_bits(instruction, 0, 4);
+          d.rn = get_bits(instruction, 5, 9);
+          d.imm = get_bits(instruction, 10, 21);
+          d.shift = get_bits(instruction, 22, 23);
+          break;
+
+      case 2: // D-type
+          d.rt = get_bits(instruction, 0, 4);
+          d.rn = get_bits(instruction, 5, 9);
+          d.imm = sign_extend(get_bits(instruction, 12, 20), 9);
+          break;
+
+      case 3: // B-type (incondicional)
+          d.imm = sign_extend(get_bits(instruction, 0, 25), 26) << 2;
+          break;
+
+      case 4: // CB-type
+          d.rt = get_bits(instruction, 0, 4);
+          d.imm = sign_extend(get_bits(instruction, 5, 23), 19) << 2;
+          break;
+
+      case 5: // IM-type (movz)
+          d.rd = get_bits(instruction, 0, 4);
+          d.imm = get_bits(instruction, 5, 20);
+          d.shift = get_bits(instruction, 21, 22);
+          break;
+
+      case 6: // BCOND-type
+          d.cond = get_bits(instruction, 0, 3);
+          d.imm = sign_extend(get_bits(instruction, 5, 23), 19) << 2;
+          break;
+  }
+
+  d.instr_type = instr_type;
+  return d;
+}
+
 
 uint32_t get_bits(uint32_t number, int start, int end) {
     if (start < 0 || end < 0 || start > end) {
@@ -26,7 +77,7 @@ void hlt(uint32_t instruction) {
 
 int64_t sign_extend(uint32_t number, int bits) {
     //if number is negative extends with ones, else extends with zeros 
-    if ((number >> bits - 1)) {
+    if ((number >> (bits - 1))) {
       number |= 0xFFFFFFFFFFFFFFFF << bits;
     }
     return number;
@@ -41,8 +92,8 @@ uint32_t negate_number(uint32_t number){
     }
     
     number = ~number;
-    number = number << 32 - position;
-    number = number >> 32 - position;
+    number = number << (32 - position);
+    number = number >> (32 - position);
     
     return number;
 }
@@ -92,3 +143,4 @@ void shifts_inm(uint32_t instruction){
     }
     update_flags(NEXT_STATE.REGS[rd]);
   }
+

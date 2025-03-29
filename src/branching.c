@@ -5,9 +5,8 @@
 #include "utils.h"
 
 void b(uint32_t instruction) {
-    DecodedInstr d = decode_instruction(instruction, 3);
-    int32_t offset = d.imm; // El desplazamiento ya está extendido y desplazado
-    NEXT_STATE.PC = CURRENT_STATE.PC + offset - 4; // Actualizar el PC con el desplazamiento
+    DecodedInstr d = decode_instruction(instruction, 7);
+    NEXT_STATE.PC = CURRENT_STATE.PC + d.imm - 4; // Actualizar el PC con el desplazamiento
 }
   
 void br(uint32_t instruction) {

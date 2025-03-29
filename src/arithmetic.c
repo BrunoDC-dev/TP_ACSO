@@ -127,6 +127,25 @@ void add(uint32_t instruction) {
     NEXT_STATE.REGS[d.rd] = CURRENT_STATE.REGS[d.rn] + CURRENT_STATE.REGS[d.rm];
 }
 
+void add_reg (uint32_t instruction) {
+    printf("add_reg function enter\n");
+    DecodedInstr d = decode_instruction(instruction, 0);
+    NEXT_STATE.REGS[d.rd] = CURRENT_STATE.REGS[d.rn] + CURRENT_STATE.REGS[d.rm];
+}
+
+
+void add_inm (uint32_t instruction) {
+    printf("add_imm function enter\n");
+    DecodedInstr d = decode_instruction(instruction, 1);
+
+    if (d.shift){
+      printf("shifting imm12\n");
+      d.imm = d.imm << 12;
+    }
+    
+    NEXT_STATE.REGS[d.rd] = CURRENT_STATE.REGS[d.rn] + d.imm;
+}
+
 void mul (uint32_t instruction){
     DecodedInstr d = decode_instruction(instruction, 0);
     NEXT_STATE.REGS[d.rd] = CURRENT_STATE.REGS[d.rn] * CURRENT_STATE.REGS[d.rm];

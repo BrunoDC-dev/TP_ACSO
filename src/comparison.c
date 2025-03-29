@@ -11,6 +11,12 @@ void cmp_imm(uint32_t instruction) {
     update_flags(result);
 }
 
+void cmp_reg(uint32_t instruction) {
+    DecodedInstr d = decode_instruction(instruction, 0);
+    int64_t result = CURRENT_STATE.REGS[d.rn] - CURRENT_STATE.REGS[d.rm];
+    update_flags(result);
+}
+
 void ands_reg (uint32_t instruction) {
     DecodedInstr d = decode_instruction(instruction, 0);
     NEXT_STATE.REGS[d.rd] = CURRENT_STATE.REGS[d.rn] & CURRENT_STATE.REGS[d.rm];

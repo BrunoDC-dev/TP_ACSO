@@ -46,5 +46,7 @@ void sturh(uint32_t instruction);
 void mul (uint32_t instruction);
 void cbz (uint32_t instruction);
 void cbnz (uint32_t instruction);
+void add_reg (uint32_t instruction);
+void add_inm (uint32_t instruction);
 
 #endif

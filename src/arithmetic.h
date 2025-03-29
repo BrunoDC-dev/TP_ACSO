@@ -10,5 +10,7 @@ void subs_imm(uint32_t instruction);
 void subs_reg(uint32_t instruction);
 void add(uint32_t instruction);
 void mul(uint32_t instruction);
+void add_reg(uint32_t instruction);
+void add_inm(uint32_t instruction);
 
 #endif // ARITHMETIC_INSTRUCTIONS_H

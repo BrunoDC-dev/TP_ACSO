@@ -19,6 +19,7 @@ typedef struct {
     uint32_t shift;
     uint32_t cond;  // Solo para instrucciones de tipo CB
     int64_t imm;
+    uint32_t ra;
     int instr_type;  // 0=R, 1=I, 2=D, 3=B, 4=CB, 5=IM
 } DecodedInstr;
 

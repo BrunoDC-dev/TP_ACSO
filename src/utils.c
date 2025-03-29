@@ -29,8 +29,8 @@ DecodedInstr decode_instruction(uint32_t instruction, int instr_type) {
           d.imm = sign_extend(get_bits(instruction, 12, 20), 9);
           break;
 
-      case 3: // B-type (incondicional)
-          d.imm = sign_extend(get_bits(instruction, 0, 25), 26) << 2;
+      case 3: // B-type (incondicional)']
+            d.rn = get_bits(instruction, 5, 9);
           break;
 
       case 4: // CB-type
@@ -45,9 +45,25 @@ DecodedInstr decode_instruction(uint32_t instruction, int instr_type) {
           break;
 
       case 6: // BCOND-type
-          d.cond = get_bits(instruction, 0, 3);
-          d.imm = sign_extend(get_bits(instruction, 5, 23), 19) << 2;
-          break;
+      printf("BCOND function enter\n");
+
+        d.cond = get_bits(instruction, 0, 3);
+        uint32_t imm19 = get_bits(instruction, 5, 23);
+        int32_t b_cond_offset = sign_extend(imm19, 19)<<2;
+        d.imm = b_cond_offset;
+        break;
+    case 7: // B-type (br)
+        uint32_t imm26 = get_bits(instruction, 0, 25);
+        int32_t b_offset = sign_extend(imm26, 26) << 2;
+        d.imm = b_offset;
+        break;
+    case 8: //add
+        d.rd = get_bits(instruction, 0, 4);
+        d.rn = get_bits(instruction, 5, 9);
+        d.rm = get_bits(instruction, 16, 20);
+        d.ra= get_bits(instruction, 10, 14);
+        break;
+
   }
 
   d.instr_type = instr_type;
